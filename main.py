@@ -14,17 +14,17 @@ def get_cast():
     for c in characters:
         input = c.text.encode('ascii', 'ignore')
         data = input.decode()
-        match = re.search('Species:.*Resides:.*Employment:.*PB:.*\[Writer:.*\]', data )
+        match = re.search('(.*)Species:(.*)Resides:(.*)Employment:(.*)PB:(.*)\[Writer:(.*)\]', data )
         if not match:
             continue
-        pb_list = re.search('PB:(.*)\[Writer:', data).group(1).lstrip().split('&')
+        pb_list = match.group(5).lstrip().split('&')
         for p in pb_list:
             pb = p.lstrip()
-            character = re.search('(.*)Species', data).group(1).lstrip()
-            species = re.search('Species:(.*)Resides:', data).group(1).lstrip()
-            resides = re.search('Resides:(.*)Employment:', data).group(1).lstrip()
-            employment = re.search('Employment:(.*)PB:', data).group(1).lstrip()
-            writer = re.search('Writer:(.*)\]', data).group(1).lstrip()
+            character = match.group(1).lstrip()
+            species = match.group(2).lstrip()
+            resides = match.group(3).lstrip()
+            employment = match.group(4).lstrip()
+            writer = match.group(6).lstrip()
             if len(pb_list) > 1:
                 character = '<i>%s</i>' % character
                 species = '<i>%s</i>' % species
