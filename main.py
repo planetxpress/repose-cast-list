@@ -63,7 +63,7 @@ def generate_html(cast_list):
     <table id="header text">
         <tr><tb>Click the table headers to sort by category.<br>
         An <i>italicized</i> character is represented by multiple PBs.<br>
-        <a href="https://www.welcometorepose.com/cast-list.html">Return to the image Cast List</a>.
+        <a href="https://www.welcometorepose.com/cast-list.html">Return to the Repose website</a>.
         <br></td></tr>
     </table>
     <p>Last Updated: %s UTC
