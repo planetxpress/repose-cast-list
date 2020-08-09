@@ -76,7 +76,6 @@ def upload_string(bucket_name, file_name, content_type, string):
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(file_name)
-    blob.cache_control = 'private, max-age=0, no-transform'
     blob.upload_from_string(string, content_type=content_type)
     blob.make_public()
 
