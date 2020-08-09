@@ -76,19 +76,19 @@ def upload(bucket_name, file_name, string):
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(file_name)
-    blob.metadata = {'Cache-Control': 'private, max-age=0, no-transform'}
+    blob.cache_control = 'private, max-age=0, no-transform'
     blob.upload_from_string(string, content_type='text/html')
     blob.make_public()
-
-
-def pubsub_trigger(event,context):
-    main()
 
 
 def main():
     cast_list = get_cast()
     html = generate_html(cast_list)
     upload(os.getenv('BUCKET_NAME'), os.getenv('CAST_FILE'), html)
+
+
+def pubsub_trigger(event,context):
+    main()
 
 if __name__ == '__main__':
     main()
