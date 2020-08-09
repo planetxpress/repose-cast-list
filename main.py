@@ -1,15 +1,28 @@
 import datetime
+import logging
 import re
 import requests
 import os
 from bs4 import BeautifulSoup
 from google.cloud import storage
 
+def check_env(vars):
+    check = True
+    for v in vars:
+        if not os.getenv(v):
+            logging.error('Missing %s in environment' % v)
+            check = False
+    return check
+
 
 def get_cast():
-    response = requests.get('https://www.welcometorepose.com/cast-list.html').text
-    parsed = BeautifulSoup(response, 'lxml')
-    characters = parsed.find_all('div', {'class': 'paragraph'})
+    try:
+        response = requests.get('https://www.welcometorepose.com/cast-list.html').text
+        parsed = BeautifulSoup(response, 'lxml')
+        characters = parsed.find_all('div', {'class': 'paragraph'})
+    except Exception as ex:
+        logging.error(ex)
+        raise
     cast_list = list()
     for c in characters:
         input = c.text.encode('ascii', 'ignore')
@@ -45,11 +58,12 @@ def get_cast():
 
 
 def generate_html(cast_list):
+    # Header
     with open('html/header.html', 'r') as f:
         header = f.read().format(
             bucket=os.getenv('BUCKET_NAME'),
         )
-
+    # Table rows
     cast_rows = ''
     with open('html/cast-row.html', 'r') as f:
         row = f.read()
@@ -62,12 +76,11 @@ def generate_html(cast_list):
             species=c['species'],
             writer=c['writer']
         )
-
+    # Footer
     with open('html/footer.html', 'r') as f:
         footer = f.read().format(
             time=datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M')
         )
-
     html = header + cast_rows + footer
     return html
 
@@ -89,6 +102,12 @@ def upload_file(bucket_name, file_name, content_type, source_dir):
 
 
 def main():
+    vars = [
+        'BUCKET_NAME',
+        'CAST_FILE'
+    ]
+    if not check_env(vars):
+        exit(1)
     cast_list = get_cast()
     html = generate_html(cast_list)
     upload_string(os.getenv('BUCKET_NAME'), os.getenv('CAST_FILE'), 'text/html', html)
