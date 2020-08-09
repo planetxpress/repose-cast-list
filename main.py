@@ -48,7 +48,6 @@ def generate_html(cast_list):
     with open('html/header.html', 'r') as f:
         header = f.read().format(
             bucket=os.getenv('BUCKET_NAME'),
-            time=datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M')
         )
 
     cast_rows = ''
@@ -65,7 +64,9 @@ def generate_html(cast_list):
         )
 
     with open('html/footer.html', 'r') as f:
-        footer = f.read()
+        footer = f.read().format(
+            time=datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M')
+        )
 
     html = header + cast_rows + footer
     return html
@@ -75,6 +76,7 @@ def upload(bucket_name, file_name, string):
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(file_name)
+    blob.metadata = {'Cache-Control': 'private, max-age=0, no-transform'}
     blob.upload_from_string(string, content_type='text/html')
     blob.make_public()
 
