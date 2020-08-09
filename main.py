@@ -31,84 +31,51 @@ def get_cast():
                 resides = '<i>%s</i>' % resides
                 employment = '<i>%s</i>' % employment
                 writer = '<i>%s</i>' % writer
-            cast_list.append({'character': character,
-                            'species': species,
-                            'resides': resides,
-                            'employment': employment,
-                            'pb': pb,
-                            'writer': writer
-                            })
+            cast_list.append(
+                {
+                    'character': character,
+                    'species': species,
+                    'resides': resides,
+                    'employment': employment,
+                    'pb': pb,
+                    'writer': writer
+                }
+            )
     return cast_list
 
 
 def generate_html(cast_list):
-    html = """
-    <!DOCTYPE html>
-    <html>
-    <title>Repose Cast List</title>
-    <meta charset="utf-8">
-    <meta HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
-    <meta HTTP-EQUIV="EXPIRES" CONTENT="Sat, 01 Jan 2000 00:00:01 GMT">
-    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-    <script src="https://code.jquery.com/jquery-latest.min.js"></script>
-    <script src="https://storage.googleapis.com/%s/tablesort.js"></script>
-    <script>
-    $(function(){
-        $('#castlist').tablesort();
-    });
-    </script>
-    
-    <body class="w3-container">
-    <h2>Repose Cast List</h2>
-    <table id="header text">
-        <tr><tb>Click the table headers to sort by category.<br>
-        An <i>italicized</i> character is represented by multiple PBs.<br>
-        <a href="https://www.welcometorepose.com/cast-list.html">Return to the Repose website</a>.
-        <br></td></tr>
-    </table>
-    <p>Last Updated: %s UTC
-    <table id="castlist" class="w3-table-all">
-    <thead>
-    <tr style="background-color: #C8C7C7">
-        <th style="cursor:pointer">Character</th>
-        <th style="cursor:pointer">Species</th>
-        <th style="cursor:pointer">Resides</th>
-        <th style="cursor:pointer">Employment</th>
-        <th style="cursor:pointer">PB</th>
-        <th style="cursor:pointer">Writer</th>
-    </tr>
-    </thead>
-    <tbody>
-""" % (os.getenv('BUCKET_NAME'), datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M'))
+    with open('html/header.html', 'r') as f:
+        header = f.read().format(
+            bucket=os.getenv('BUCKET_NAME'),
+            time=datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M')
+        )
 
+    cast_rows = ''
+    with open('html/cast-row.html', 'r') as f:
+        row = f.read()
     for c in cast_list:
-        html += """
-        <tr class="item">
-            <td>%s</td>
-            <td>%s</td>
-            <td>%s</td>
-            <td>%s</td>
-            <td>%s</td>
-            <td>%s</td>
-        </tr>
-""" % (c['character'], c['species'], c['resides'], c['employment'], c['pb'], c['writer'])
+        cast_rows += row.format(
+            character=c['character'],
+            employment=c['employment'],
+            pb=c['pb'],
+            resides=c['resides'],
+            species=c['species'],
+            writer=c['writer']
+        )
 
-    html += """
-    </tbody>
-    </table>
-    </body>
-    </html>
-"""
+    with open('html/footer.html', 'r') as f:
+        footer = f.read()
+
+    html = header + cast_rows + footer
     return html
 
 
-def upload(html):
-    bucket_name = os.getenv('BUCKET_NAME')
-    destination_object = os.getenv('CAST_FILE')
+def upload(bucket_name, file_name, string):
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(destination_object)
-    blob.upload_from_string(html, content_type='text/html')
+    blob = bucket.blob(file_name)
+    blob.upload_from_string(string, content_type='text/html')
     blob.make_public()
 
 
@@ -119,7 +86,7 @@ def pubsub_trigger(event,context):
 def main():
     cast_list = get_cast()
     html = generate_html(cast_list)
-    upload(html)
+    upload(os.getenv('BUCKET_NAME'), os.getenv('CAST_FILE'), html)
 
 if __name__ == '__main__':
     main()
