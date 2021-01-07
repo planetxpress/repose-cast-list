@@ -1,4 +1,4 @@
 requests==2.24.0
 beautifulsoup4==4.9.1
 google-cloud-storage==1.29.0
-lxml==4.5.2
+lxml==4.6.2
